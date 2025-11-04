@@ -26,11 +26,9 @@
         WebSocket.prototype.original.call(this, data);
     };
 
-    // This function runs once on script injection to handle pre-existing states
     async function initialize() {
         console.log("[Interceptor] Initializing. Checking current voice state...");
         
-        // Find Discord's internal modules. This is a bit of a hack but is the most reliable way
         let ws, voiceStateStore;
         const webpackChunk = window.webpackChunkdiscord_app;
         if (!webpackChunk) {
@@ -38,6 +36,7 @@
             return;
         }
 
+        // A more targeted search for Discord's internal modules
         webpackChunk.push([
             [Math.random()], {}, 
             (req) => {
@@ -45,46 +44,42 @@
                     const module = req.c[id].exports;
                     if (!module) continue;
 
-                    // Find the WebSocket instance
-                    if (module.send && typeof module.send === 'function' && module.addEventListener) {
+                    if (!ws && module.send && typeof module.send === 'function' && module._handleDispatch) {
                         ws = module;
                     }
-                    // Find the voice state store
-                    if (module.getVoiceStateForUser && module.getCurrentUser) {
+                    if (!voiceStateStore && module.getVoiceStateForUser && module.getCurrentUser) {
                         voiceStateStore = module;
                     }
+                    if (ws && voiceStateStore) break;
                 }
             }
         ]);
-        webpackChunk.pop(); // Clean up the temporary chunk
+        webpackChunk.pop();
 
         if (!ws || !voiceStateStore) {
-            console.error("[Interceptor] Could not find WebSocket or VoiceState modules. Discord's UI may have changed.");
+            console.warn("[Interceptor] Automatic initialization failed. Discord's internal structure may have changed. Please manually toggle your deafen state once to activate the modification for your current session.");
             return;
         }
 
-        // Get the current user's voice state
         const currentUserId = voiceStateStore.getCurrentUser().id;
         const currentVoiceState = voiceStateStore.getVoiceStateForUser(currentUserId);
 
         if (currentVoiceState && currentVoiceState.selfDeaf) {
             console.log("[Initializer] User is already deafened. Sending a trigger payload to test the edge case.");
             
-            // Craft a payload that mimics a voice state update to trigger the interceptor
             const payload = {
-                op: 4, // Opcode for Voice State Update
+                op: 4,
                 d: {
                     guild_id: currentVoiceState.guildId,
                     channel_id: currentVoiceState.channelId,
                     self_mute: currentVoiceState.selfMute,
-                    self_deaf: true // Ensure the trigger key is present
+                    self_deaf: true
                 }
             };
             
-            // Send the crafted payload. This will be intercepted by our patched function
             ws.send(JSON.stringify(payload));
         } else {
-            console.log("[Initializer] User is not deafened. No action taken. The script will now listen for changes.");
+            console.log("[Initializer] User is not deafened. The script will now listen for changes.");
         }
     }
 
