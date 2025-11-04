@@ -1,10 +1,7 @@
-# Discord Fake Mute & Defean 
+# Discord client-side hook: Fake mute & defean 
 
-Discord exploit (console hack), que permite ensordecerse y/o mutearse falsamente.
+This script allows the user to fool the server into beliving the user is muted/deafened but still let through audio from the mic input and output to headphones.
+This means that you can listen conversations while deafened and talk while muted.
 
-## ¿Cómo usarlo?
-Simplemente ensordecete o muteate y abre el menú de desarrollador (Ctrl + Mayus + I), vete a la opción de Consola y pega el script. Una vez hecho eso, simplemente remuevete el ensordecimiento o muteo y el script permanecerá activo dando a entender que estás ensordecido/muteado.
-Para salirte de un canal de voz, usa Control + R
-
-# Advertencia: No me responsabilizo por el mal uso de este exploit.
-
+## How to use it
+I do not endorse the usage of this kind of client-side exploitation, the code is just uploaded as an archive and for research purposes.
